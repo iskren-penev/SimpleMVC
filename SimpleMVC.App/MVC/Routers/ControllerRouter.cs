@@ -3,13 +3,14 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Net;
     using System.Reflection;
     using SimpleHttpServer.Enums;
     using SimpleHttpServer.Models;
     using SimpleMVC.App.MVC.Attributes.Methods;
     using SimpleMVC.App.MVC.Controllers;
+    using SimpleMVC.App.MVC.Helpers;
     using SimpleMVC.App.MVC.Interfaces;
-    using static System.Type;
 
     public class ControllerRouter : IHandleable
     {
@@ -20,13 +21,24 @@
         private string actionName;
         private object[] methodParams;
 
+        private string[] controllerActionParams;
+        private string[] controllerAction;
+
+        public ControllerRouter()
+        {
+            this.getParams = new Dictionary<string, string>();
+            this.postParams = new Dictionary<string, string>();
+        }
 
         public HttpResponse Handle(HttpRequest request)
         {
             ParseInput(request);
 
-            IInvocable actionResult = (IInvocable)this.GetMethod()
-                .Invoke(this.GetController(), this.methodParams);
+
+            MethodInfo method = this.GetMethod();
+            Controller controller = this.GetController();
+            IInvocable actionResult = (IInvocable)method
+                .Invoke(controller, this.methodParams);
 
             string content = actionResult.Invoke();
             HttpResponse response = new HttpResponse()
@@ -40,10 +52,22 @@
 
         private void ParseInput(HttpRequest request)
         {
-            this.getParams = RetrieveGetParams(request.Url);
-            this.postParams = RetrievePostParams(request.Content);
-            this.requestMethod = request.Method.ToString();
-            RetrieveControllerAndActionName(request.Url);
+            string uri = WebUtility.UrlDecode(request.Url);
+            string queryString = string.Empty;
+            if (request.Url.Contains('?'))
+            {
+                queryString = request.Url.Split('?')[1];
+            }
+
+            this.controllerActionParams = uri.Split('?');
+            this.controllerAction = controllerActionParams[0].Split(new char[] { '/' },
+                StringSplitOptions.RemoveEmptyEntries);
+
+            this.RetrieveGetParams(queryString);
+            this.RetrievePostParams(request.Content);
+            this.RetrieveMethodName(request);
+            this.RetrieveControllerName();
+            this.RetrieveActionName();
 
             MethodInfo method = this.GetMethod();
             if (method==null)
@@ -79,74 +103,53 @@
                     index++;
                 }
             }
-
+        }
+        
+        private void RetrieveGetParams(string queryString)
+        {
+            string[] paramTokens = queryString.Split('&');
+            if (paramTokens.Length >= 1)
+            {
+                foreach (string token in paramTokens)
+                {
+                    if (token.Contains('='))
+                    {
+                        string[] innerTokens = token.Split('=');
+                        this.getParams.Add(innerTokens[0], innerTokens[1]);
+                    }
+                }
+            }
         }
 
-
-        private IDictionary<string, string> RetrieveGetParams(string requestUrl)
+        private void RetrievePostParams(string requestContent)
         {
             IDictionary<string, string> temp = new Dictionary<string, string>();
-            int indexOfQuestion = requestUrl.IndexOf('?');
-            if (indexOfQuestion == -1)
+            if (requestContent != null)
             {
-                return temp;
+                requestContent = WebUtility.UrlDecode(requestContent);
+                string[] paramTokens = requestContent.Split('&');
+                foreach (string token in paramTokens)
+                {
+                    string[] innerTokens = token.Split('=');
+                    temp.Add(innerTokens[0], innerTokens[1]);
+                }
             }
-            string parametersString = requestUrl.Substring(indexOfQuestion);
-            string[] paramTokens = parametersString.Split('&');
-            foreach (string token in paramTokens)
-            {
-                string[] innerTokens = token.Split('=');
-                temp.Add(innerTokens[0], innerTokens[1]);
-            }
-
-            return temp;
         }
 
-        private IDictionary<string, string> RetrievePostParams(string requestContent)
+        private void RetrieveControllerName()
         {
-            IDictionary<string, string> temp = new Dictionary<string, string>();
-            if (String.IsNullOrEmpty(requestContent))
-            {
-                return temp;
-            }
-            string[] paramTokens = requestContent.Split('&');
-            foreach (string token in paramTokens)
-            {
-                string[] innerTokens = token.Split('=');
-                temp.Add(innerTokens[0], innerTokens[1]);
-            }
-
-            return temp;
+            this.controllerName = this.controllerAction[this.controllerAction.Length - 2].ToUpperFirst()
+                                  + MvcContext.Current.ControllersSuffix;
         }
 
-        private void RetrieveControllerAndActionName(string requestUrl)
+        private void RetrieveActionName()
         {
-            int indexOfFirstSlash = requestUrl.IndexOf('/');
-            int indexOfSecondSlash = requestUrl.Substring(indexOfFirstSlash + 1).IndexOf('/');
-            if (indexOfSecondSlash == -1)
-            {
-                throw new Exception("Invalid URL");
-            }
-            int cotrollerNameLength = indexOfSecondSlash - (indexOfFirstSlash + 1);
-            string tempControllerName = requestUrl.Substring(indexOfFirstSlash + 1,
-                cotrollerNameLength);
-            string tempActionName;
-            int indexOfQuestion = requestUrl.IndexOf('?');
-            if (indexOfQuestion == -1)
-            {
-                tempActionName = requestUrl.Substring(indexOfSecondSlash + 1);
-            }
-            else
-            {
-                int actionNameLength = indexOfQuestion - (indexOfSecondSlash + 1);
-                tempActionName = requestUrl.Substring(indexOfSecondSlash + 1, actionNameLength);
-            }
+            this.actionName = this.controllerAction[this.controllerAction.Length - 1].ToUpperFirst();
+        }
 
-            this.controllerName = tempControllerName[0].ToString().ToUpper()
-                                 + tempControllerName.Substring(1)
-                                 +"Controller";
-            this.actionName = tempActionName[0].ToString().ToUpper()
-                              + tempActionName.Substring(1);
+        private void RetrieveMethodName(HttpRequest request)
+        {
+            this.requestMethod = request.Method.ToString();
         }
 
         private Controller GetController()

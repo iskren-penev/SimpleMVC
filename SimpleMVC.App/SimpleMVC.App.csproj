@@ -49,6 +49,7 @@
     <Compile Include="MVC\Attributes\Methods\HttpMethodAttribute.cs" />
     <Compile Include="MVC\Attributes\Methods\HttpPostAttribute.cs" />
     <Compile Include="MVC\Controllers\Controller.cs" />
+    <Compile Include="MVC\Helpers\StringExtentions.cs" />
     <Compile Include="MVC\Interfaces\Generic\IActionResult.cs" />
     <Compile Include="MVC\Interfaces\Generic\IRenderable.cs" />
     <Compile Include="MVC\Interfaces\IActionResult.cs" />
