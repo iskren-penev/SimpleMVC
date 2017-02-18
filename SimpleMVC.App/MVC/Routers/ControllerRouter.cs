@@ -123,7 +123,6 @@
 
         private void RetrievePostParams(string requestContent)
         {
-            IDictionary<string, string> temp = new Dictionary<string, string>();
             if (requestContent != null)
             {
                 requestContent = WebUtility.UrlDecode(requestContent);
@@ -131,7 +130,7 @@
                 foreach (string token in paramTokens)
                 {
                     string[] innerTokens = token.Split('=');
-                    temp.Add(innerTokens[0], innerTokens[1]);
+                    this.postParams.Add(innerTokens[0], innerTokens[1]);
                 }
             }
         }
