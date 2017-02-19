@@ -1,5 +1,6 @@
 ﻿namespace SimpleMVC.App.Views.Users
 {
+    using System.Linq;
     using System.Text;
     using SimpleMVC.App.MVC.Interfaces.Generic;
     using SimpleMVC.App.ViewModels;
@@ -11,6 +12,7 @@
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine($"<h2>User: {Model.Username}</h2>");
+            sb.AppendLine($"<h2>Usernotes: {Model.Notes.Count()}</h2>");
             sb.AppendLine("<a href=\"/home/index\">Home<a/>");
             sb.AppendLine("<form action=\"profile\" method=\"POST\">");
             sb.AppendLine("Title: <input type=\"text\" name=\"Title\" /></br>");
@@ -18,7 +20,7 @@
             sb.AppendLine($"<input type=\"hidden\" name=\"UserId\" value=\"{Model.UserId}\"/>");
             sb.AppendLine("<input type=\"submit\" value=\"Add Note\" />");
             sb.AppendLine("</form>");
-            sb.AppendLine("<h5>List of nodes</h5>");
+            sb.AppendLine("<h5>List of notes</h5>");
             sb.AppendLine("<ul>");
             foreach (var note in Model.Notes)
             {

@@ -19,7 +19,7 @@
 
         public string Password { get; set; }
 
-        public ICollection<Note> Notes
+        public virtual ICollection<Note> Notes
         {
             get { return this.notes; }
             set { this.notes = value; }
