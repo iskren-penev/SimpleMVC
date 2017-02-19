@@ -11,13 +11,17 @@ namespace SimpleHttpServer
         public HttpServer(int port, IEnumerable<Route> routes)
         {
             this.Port = port;
-            this.Processor = new HttpProcessor(routes);
             this.IsActive = true;
+            this.Sessions = new Dictionary<string, HttpSession>();
+            this.Processor = new HttpProcessor(routes, Sessions);
+
         }
+
         public TcpListener Listener { get; private set; }
         public int Port { get; private set; }
         public HttpProcessor Processor { get; private set; }
         public bool IsActive { get; private set; }
+        public IDictionary<string, HttpSession> Sessions { get; set; }
 
         public void Listen()
         {

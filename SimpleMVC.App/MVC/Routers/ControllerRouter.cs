@@ -87,6 +87,16 @@
                     this.methodParams[index] = Convert.ChangeType(value, parameter.ParameterType);
                     index++;
                 }
+                else if (parameter.ParameterType == typeof(HttpRequest))
+                {
+                    this.methodParams[index] = request;
+                    index++;
+                }
+                else if (parameter.ParameterType == typeof(HttpSession))
+                {
+                    this.methodParams[index] = request.Session;
+                    index++;
+                }
                 else
                 {
                     Type bindingModelType = parameter.ParameterType;
