@@ -85,6 +85,10 @@ namespace SimpleHttpServer
                         header.AddCookie(cookie);
                     }
                 }
+                else if (name == "Location")
+                {
+                    header.Location = value;
+                }
                 else if (name == "Content-Length")
                 {
                     header.ContentLength = value;

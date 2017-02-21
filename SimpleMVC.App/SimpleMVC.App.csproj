@@ -56,10 +56,12 @@
   <ItemGroup>
     <Compile Include="AppStart.cs" />
     <Compile Include="BindingModels\AddNoteBindingModel.cs" />
+    <Compile Include="BindingModels\LoginUserBindingModel.cs" />
     <Compile Include="BindingModels\RegisterUserBindingModel.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="Data\NotesApplicationContext.cs" />
+    <Compile Include="Models\Login.cs" />
     <Compile Include="Models\Note.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="MVC\Attributes\Methods\HttpGetAttribute.cs" />
@@ -70,12 +72,14 @@
     <Compile Include="MVC\Interfaces\Generic\IActionResult.cs" />
     <Compile Include="MVC\Interfaces\Generic\IRenderable.cs" />
     <Compile Include="MVC\Interfaces\IActionResult.cs" />
+    <Compile Include="MVC\Interfaces\IDbIdentityContext.cs" />
     <Compile Include="MVC\Interfaces\IHandleable.cs" />
     <Compile Include="MVC\Interfaces\IInvocable.cs" />
     <Compile Include="MVC\Interfaces\IRenderable.cs" />
     <Compile Include="MVC\MvcContext.cs" />
     <Compile Include="MVC\MvcEngine.cs" />
     <Compile Include="MVC\Routers\ControllerRouter.cs" />
+    <Compile Include="MVC\Security\SingInManager.cs" />
     <Compile Include="MVC\ViewEngline\ActionResult.cs" />
     <Compile Include="MVC\ViewEngline\Generic\ActionResult.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -86,6 +90,7 @@
     <Compile Include="ViewModels\UserViewModel.cs" />
     <Compile Include="Views\Home\Index.cs" />
     <Compile Include="Views\Users\All.cs" />
+    <Compile Include="Views\Users\Login.cs" />
     <Compile Include="Views\Users\Profile.cs" />
     <Compile Include="Views\Users\Register.cs" />
   </ItemGroup>

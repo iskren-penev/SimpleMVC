@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Linq;
+    using SimpleHttpServer.Models;
     using SimpleMVC.App.BindingModels;
     using SimpleMVC.App.Data;
     using SimpleMVC.App.Models;
@@ -9,10 +10,18 @@
     using SimpleMVC.App.MVC.Controllers;
     using SimpleMVC.App.MVC.Interfaces;
     using SimpleMVC.App.MVC.Interfaces.Generic;
+    using SimpleMVC.App.MVC.Security;
     using SimpleMVC.App.ViewModels;
 
     public class UsersController : Controller
     {
+        private SingInManager singInManager;
+
+        public UsersController()
+        {
+            this.singInManager = new SingInManager(new NotesApplicationContext());
+        }
+
         [HttpGet]
         public IActionResult Register()
         {
@@ -40,8 +49,13 @@
         }
 
         [HttpGet]
-        public IActionResult<IEnumerable<AllUsernamesViewModel>> All()
+        public IActionResult<IEnumerable<AllUsernamesViewModel>> All(HttpSession session, HttpResponse response)
         {
+            if (!this.singInManager.IsAuthenticated(session))
+            {
+                Redirect(response, "/users/login");
+                return null;
+            }
             List<User> users = null;
             using (var context = new NotesApplicationContext())
             {
@@ -96,6 +110,32 @@
                 context.SaveChanges();
             }
             return Profile(model.UserId);
+        }
+
+        [HttpGet]
+        public IActionResult Login(LoginUserBindingModel model, HttpSession session, HttpResponse response)
+        {
+            string username = model.Username;
+            string password = model.Password;
+            string sessionId = session.Id;
+
+            using (var context = new NotesApplicationContext())
+            {
+                User user = context.Users.FirstOrDefault(u => u.Username == username && u.Password == password);
+                if (user != null)
+                {
+                    Login login = new Login()
+                    {
+                        User = user, SessionId = sessionId
+                    };
+                    context.Logins.Add(login);
+                    context.SaveChanges();
+                    Redirect(response, "/home/index");
+                    return null;
+                }
+            }
+
+            return this.View();
         }
     }
 }

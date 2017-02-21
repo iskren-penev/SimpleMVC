@@ -23,16 +23,22 @@
 
         private string[] controllerActionParams;
         private string[] controllerAction;
+        private HttpRequest request;
+        private HttpResponse response;
 
         public ControllerRouter()
         {
             this.getParams = new Dictionary<string, string>();
             this.postParams = new Dictionary<string, string>();
+            this.request = new HttpRequest();
+            this.response =new HttpResponse();
         }
 
         public HttpResponse Handle(HttpRequest request)
         {
-            ParseInput(request);
+            this.request = request;
+            this.response = new HttpResponse();
+            ParseInput();
 
 
             MethodInfo method = this.GetMethod();
@@ -40,23 +46,24 @@
             IInvocable actionResult = (IInvocable)method
                 .Invoke(controller, this.methodParams);
 
-            string content = actionResult.Invoke();
-            HttpResponse response = new HttpResponse()
+            if (string.IsNullOrEmpty(this.response.Header.Location))
             {
-                StatusCode = ResponseStatusCode.Ok,
-                ContentAsUTF8 = content
-            };
+                this.response.StatusCode = ResponseStatusCode.Ok;
+                this.response.ContentAsUTF8 = actionResult.Invoke();
+            }
+            
+            this.ClearParameters();
 
             return response;
         }
 
-        private void ParseInput(HttpRequest request)
+        private void ParseInput()
         {
-            string uri = WebUtility.UrlDecode(request.Url);
+            string uri = WebUtility.UrlDecode(this.request.Url);
             string queryString = string.Empty;
-            if (request.Url.Contains('?'))
+            if (this.request.Url.Contains('?'))
             {
-                queryString = request.Url.Split('?')[1];
+                queryString = this.request.Url.Split('?')[1];
             }
 
             this.controllerActionParams = uri.Split('?');
@@ -64,8 +71,8 @@
                 StringSplitOptions.RemoveEmptyEntries);
 
             this.RetrieveGetParams(queryString);
-            this.RetrievePostParams(request.Content);
-            this.RetrieveMethodName(request);
+            this.RetrievePostParams(this.request.Content);
+            this.RetrieveMethodName(this.request);
             this.RetrieveControllerName();
             this.RetrieveActionName();
 
@@ -89,12 +96,17 @@
                 }
                 else if (parameter.ParameterType == typeof(HttpRequest))
                 {
-                    this.methodParams[index] = request;
+                    this.methodParams[index] = this.request;
                     index++;
                 }
                 else if (parameter.ParameterType == typeof(HttpSession))
                 {
-                    this.methodParams[index] = request.Session;
+                    this.methodParams[index] = this.request.Session;
+                    index++;
+                }
+                else if (parameter.ParameterType == typeof(HttpResponse))
+                {
+                    this.methodParams[index] = this.response;
                     index++;
                 }
                 else
@@ -113,6 +125,12 @@
                     index++;
                 }
             }
+        }
+
+        private void ClearParameters()
+        {
+            this.getParams = new Dictionary<string, string>();
+            this.postParams = new Dictionary<string, string>();
         }
         
         private void RetrieveGetParams(string queryString)
